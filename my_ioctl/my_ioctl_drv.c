@@ -85,9 +85,10 @@ static const struct file_operations my_fops = {
 };
 
 static struct miscdevice my_misc_dev = {
-	MISC_DYNAMIC_MINOR,
-	MY_IOCTL,
-	&my_fops
+	.minor = MISC_DYNAMIC_MINOR,
+	.name = "my_misc",
+	.fops = &my_fops,
+	.mode = S_IRWXUGO,
 };
 
 
@@ -96,7 +97,7 @@ static struct miscdevice my_misc_dev = {
  */
 static int __init my_init(void)
 {
-	int ret;
+	int ret = 0;
 
 	ret = misc_register(&my_misc_dev);
 
