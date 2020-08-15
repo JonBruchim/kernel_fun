@@ -1,13 +1,15 @@
 
 
-obj-m += my_ioctl_drv.o
-misc_drive-objs := my_ioctl_drv.o 
+obj-m += misc_drive.o
+misc_drive-y := my_ioctl_drv.o
+
+KDIR ?= /lib/modules/`uname -r`/build
 
 .PHONY: all clean
 
 all:
-	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+	make -C $(KDIR) M=$(PWD) modules
 
 clean:
-	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+	make -C $(KDIR) M=$(PWD) clean
 

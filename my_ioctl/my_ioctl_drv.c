@@ -8,19 +8,19 @@
 
 #define MY_IOCTL _IOW(0xFF, 0xFF, int32_t*)
 
-static int perf_enabled __read_mostly;
-static DEFINE_SPINLOCK(perf_lock);
+static int drv_busy __read_mostly;
+static DEFINE_SPINLOCK(my_lock);
 
 
 static int my_open(struct inode *inode, struct file *file)
 {
-	spin_lock(&perf_lock);
-	if (perf_enabled) {
-		spin_unlock(&perf_lock);
+	spin_lock(&my_lock);
+	if (drv_busy) {
+		spin_unlock(&my_lock);
 		return -EBUSY;
 	}
-	perf_enabled = 1;
- 	spin_unlock(&perf_lock);
+	drv_busy = 1;
+ 	spin_unlock(&my_lock);
 
 	return 0;
 }
@@ -30,9 +30,9 @@ static int my_open(struct inode *inode, struct file *file)
  */
 static int my_release(struct inode *inode, struct file *file)
 {
-	spin_lock(&perf_lock);
-	perf_enabled = 0;
-	spin_unlock(&perf_lock);
+	spin_lock(&my_lock);
+	drv_busy = 0;
+	spin_unlock(&my_lock);
 
 	return 0;
 }
@@ -42,12 +42,10 @@ static int my_release(struct inode *inode, struct file *file)
  * All routines effect the processor that they are executed on.  Thus you
  * must be running on the processor that you wish to change.
  */
-
 static long my_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
-	long error_start;
-	uint32_t tmp = 0xFF;
-	int error = 0;
+	uint32_t tmp = 0x0F;
+	long error = 0;
 
 	switch (cmd) {
 		case MY_IOCTL:
@@ -90,7 +88,6 @@ static struct miscdevice my_misc_dev = {
 	.fops = &my_fops,
 	.mode = S_IRWXUGO,
 };
-
 
 /*
  * Initialize the module
